@@ -5,6 +5,11 @@ import com.contentnexus.ingestion.service.repository.ContentRepository;
 import com.contentnexus.ingestion.service.service.GcsService;
 import com.contentnexus.ingestion.service.service.KafkaProducerService;
 import com.contentnexus.ingestion.service.service.MetadataService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -17,6 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/content")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Content API", description = "API for handling content ingestion and processing")
 public class ContentController {
     private static final Logger logger = LoggerFactory.getLogger(ContentController.class);
     private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -34,9 +40,22 @@ public class ContentController {
         this.kafkaProducerService = kafkaProducerService;
     }
 
+    @Operation(
+            summary = "Upload a file",
+            description = "Uploads a file to Google Cloud Storage, extracts metadata, saves it in the database, and sends a message to Kafka."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request (e.g., no file selected)"),
+            @ApiResponse(responseCode = "413", description = "File size exceeds limit"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
-                                             @RequestParam("uploadedBy") String uploadedBy) {
+    public ResponseEntity<String> uploadFile( @Parameter(description = "File to upload", required = true)
+                                                  @RequestParam("file") MultipartFile file,
+                                              @Parameter(description = "Uploader's name", required = true)
+                                              @RequestParam("uploadedBy") String uploadedBy) {
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("No file selected for upload.");
