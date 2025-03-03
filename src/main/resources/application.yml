@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/contentIngestionDB
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: video-ingestion-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    admin:
+      auto-create-topics: true
+    topics:
+      video_ingested:
+        partitions: 3
+        replication-factor: 1
+
+google:
+  cloud:
+    project-id: graphic-perigee-434007
+    transcoder:
+      location: us-central1
+    credentials:
+      file: D:/projects/CDN/GOOGLE_APPLICATION_CREDENTIALS/graphic-perigee-434007-m7-9ea448bbc77e.json
+
+
+server:
+  port: 8085
+  servlet:
+    multipart:
+      max-file-size: 150MB
+      max-request-size: 150MB
+
+logging:
+  level:
+    org.apache.kafka: DEBUG
