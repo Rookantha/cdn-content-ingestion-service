@@ -1,14 +1,13 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/contentIngestionDB
-    username: postgres
-    password: postgres
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    gcp:
+      project-id: graphic-perigee-434007-m7
+      credentials:
+        location: file:D:/projects/contentnexus/GOOGLE_APPLICATION_CREDENTIALS/graphic-perigee-434007-m7-3c7ebafb947e.json
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/contentIngestionDB
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -31,8 +30,7 @@ google:
     transcoder:
       location: us-central1
     credentials:
-      file: D:/projects/CDN/GOOGLE_APPLICATION_CREDENTIALS/graphic-perigee-434007-m7-9ea448bbc77e.json
-
+      file: D:/projects/contentnexus/GOOGLE_APPLICATION_CREDENTIALS/graphic-perigee-434007-m7-3c7ebafb947e.json
 
 server:
   port: 8085

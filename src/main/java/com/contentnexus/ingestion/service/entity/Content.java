@@ -1,40 +1,23 @@
 package com.contentnexus.ingestion.service.entity;
 
-import jakarta.persistence.*;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
 @Data
 @NoArgsConstructor
-@Table(name = "contents")
+@Document(collection = "contents")
 public class Content {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id; // MongoDB IDs are typically stored as strings (ObjectId)
 
-    @Column(nullable = false, unique = true)
     private String videoId;
-
-    @Column(nullable = false)
     private String title;
-
-    @Column(nullable = false)
     private String description;
-
-    @Column(nullable = false)
     private String type;
-
-    @Column(nullable = false)
     private String uploadedBy;
-
-    @Column(nullable = true)
     private String category;
-
-    @Column(nullable = true)
     private String status;
-
-    @Column(nullable = false)
     private String rawVideoPath;
 }
