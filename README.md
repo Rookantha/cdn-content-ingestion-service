@@ -1,200 +1,119 @@
-# 📂 Content Ingestion Service
+# Content Ingestion Service
 
-🚀 This Spring Boot service enables file uploads to **Google Cloud Storage (GCS)**, extracts metadata, stores it in **PostgreSQL**, and publishes events to **Kafka**.
+This service provides an API for uploading content (currently focused on video files), extracting basic metadata, storing the metadata in a database, uploading the raw content to Google Cloud Storage (GCS), and sending a notification about the ingested content via Kafka.
 
----
+## Overview
 
-## 📌 Features
-- 📂 **Upload files** to **Google Cloud Storage (GCS)**
-- 🛢️ **Stores metadata** in **PostgreSQL**
-- 📤 **Publishes events** to **Kafka**
-- 📜 **Exposes OpenAPI documentation** via **Swagger**
-- 🏗 **Supports AWS S3 integration**
-- 🔄 **Handles large file uploads** (Up to **150MB**)
+The service is built using Spring Boot and leverages the following technologies:
 
----
+* **Spring Boot:** For building the application.
+* **Spring Web:** For handling HTTP requests and building RESTful APIs.
+* **Spring Data JPA:** For interacting with the database.
+* **Spring Kafka:** For producing messages to a Kafka topic.
+* **Google Cloud Storage (GCS) Client:** For interacting with Google Cloud Storage.
+* **Swagger/OpenAPI:** For API documentation.
+* **Lombok:** For reducing boilerplate code.
+* **Slf4j:** For logging.
 
-## 🛠️ Installation & Setup
+## Functionality
 
-### 1️⃣ Clone the Repository  
-```sh
-git clone https://github.com/Rookantha/cdn-content-ingestion-service.git
-```
-### 2️⃣ Configure Environment
-Create an application.yml file with your Google Cloud Storage, PostgreSQL, and Kafka details.
+The service offers the following main functionality:
 
-```yaml
-google:
-  cloud:
-    credentials:
-      file: "D:/projects/CDN/GOOGLE_APPLICATION_CREDENTIALS/"
+* **File Upload:** Accepts video files via a REST API endpoint.
+* **Google Cloud Storage Integration:** Uploads the received video files to a configured GCS bucket.
+* **Metadata Extraction:** Extracts basic metadata such as filename, uploader, and generates a unique video ID.
+* **Database Persistence:** Stores the extracted metadata and the GCS file URL in a database.
+* **Kafka Integration:** Sends a message to a Kafka topic upon successful content ingestion, including the content metadata.
+* **Error Handling:** Implements global exception handling for file size limits and other potential errors.
+* **API Documentation:** Provides comprehensive API documentation using OpenAPI (Swagger).
 
-```
+## API Endpoints
 
-###  3️⃣ Start PostgreSQL & Kafka
-Ensure PostgreSQL and Kafka are running:
+The following API endpoint is available:
 
-🛢️ PostgreSQL Setup
-```sh
-docker run --name postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=contentIngestionDB -p 5432:5432 -d postgres
-```
-### 🔄 Kafka Setup
-```sh
-docker-compose up -d  # If using a Docker-based Kafka setup
-```
-### 4️⃣ Build & Run the Project
-Using Maven
-```sh
-mvn clean install
-mvn spring-boot:run
-```
-Using Docker
-``` sh
+* **`POST /api/v1/content/upload`**: Uploads a file.
+    * **Request Parameters:**
+        * `file` (MultipartFile, required): The video file to upload.
+        * `uploadedBy` (String, required): The name of the user uploading the file.
+    * **Request Body:** `multipart/form-data` containing the file and `uploadedBy` parameter.
+    * **Responses:**
+        * **`200 OK`**: File uploaded successfully, returns the GCS URL of the uploaded file.
+        * **`400 Bad Request`**: No file selected for upload.
+        * **`413 Payload Too Large`**: File size exceeds the maximum allowed size (50MB).
+        * **`500 Internal Server Error`**: An error occurred during the upload process.
 
-docker build -t content-ingestion-service .
-docker run -p 8085:8085 content-ingestion-service
-```
-### 📌 API Endpoints
-📂 Upload File
-POST /api/v1/content/upload
-- Description: Uploads a file to Google Cloud Storage (GCS), extracts metadata, saves it, and sends Kafka messages.
----
-Request Parameters:
-- file (multipart) – The file to upload (Required)
-- uploadedBy (String) – The uploader's name (Required)
----
-Responses:
-- ✅ 200 OK → File uploaded successfully
-- ❌ 400 Bad Request → No file selected
-- ❌ 413 Payload Too Large → File exceeds 150MB
-- ❌ 500 Internal Server Error → Upload failed
---- 
+## Configuration
 
- 🛠️ Example Request (cURL)
+The following configuration properties can be set in your `application.properties` or `application.yml` file:
 
-```sh
-curl -X POST "http://localhost:8085/api/v1/content/upload" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@/path/to/video.mp4" \
-  -F "uploadedBy=JohnDoe"
-```
-#### 📜 Swagger API Documentation
-You can explore the API using Swagger UI:
+* **`google.cloud.credentials.file`**: Path to the Google Cloud service account credentials JSON file.
+* **`google.gcs.raw-bucket`**: Name of the Google Cloud Storage bucket where raw uploaded files will be stored.
+* **`google.gcs.input-bucket`**: Name of another Google Cloud Storage bucket (currently not directly used in the provided code but might be intended for future use).
+* **`spring.kafka.bootstrap-servers`**: Comma-separated list of Kafka broker addresses.
+* **`spring.kafka.producer.key-serializer`**: Serializer class for Kafka message keys (e.g., `org.apache.kafka.common.serialization.StringSerializer`).
+* **`spring.kafka.producer.value-serializer`**: Serializer class for Kafka message values (e.g., `org.springframework.kafka.support.serializer.JsonSerializer`).
+* **Database Configuration (e.g., Spring Data JPA properties)**: Configure your database connection details (e.g., `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`, `spring.jpa.hibernate.ddl-auto`).
 
-Swagger UI
-OpenAPI JSON
-#### 🔧 Technologies Used
-- Java 17 ☕
-- Spring Boot 3.3.4 🚀
-- PostgreSQL 🛢️
-- Kafka 🔄
-- Google Cloud Storage (GCS) 🌍
-- SpringDoc OpenAPI (Swagger) 📜
-- Lombok 🛠️
-- Maven 📦
-- Docker 🐳
----
+## Getting Started
 
-#### 🏗️ Project Configuration
-📦 pom.xml Dependencies
-``` xml
-Copy
+### Prerequisites
 
-<dependencies>
-    <!-- Spring Boot Web -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
+* Java Development Kit (JDK) 17 or higher
+* Maven
+* Google Cloud SDK configured with appropriate permissions for GCS.
+* A Google Cloud Storage bucket created.
+* A Google Cloud service account with permissions to write to the GCS bucket.
+* Kafka broker running.
+* A database configured (e.g., PostgreSQL, MySQL).
 
-    <!-- PostgreSQL Driver -->
-    <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <scope>runtime</scope>
-    </dependency>
+### Steps to Run the Service
 
-    <!-- Kafka -->
-    <dependency>
-        <groupId>org.springframework.kafka</groupId>
-        <artifactId>spring-kafka</artifactId>
-    </dependency>
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository_url>
+    cd <repository_directory>
+    ```
 
-    <!-- Google Cloud Storage -->
-    <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>spring-cloud-gcp-starter-storage</artifactId>
-    </dependency>
+2.  **Configure Google Cloud Credentials:**
+    * Download your Google Cloud service account credentials JSON file.
+    * Update the `google.cloud.credentials.file` property in your `application.properties` or `application.yml` with the path to this file.
 
-    <!-- SpringDoc OpenAPI -->
-    <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        <version>2.0.2</version>
-    </dependency>
-</dependencies>
-```
-⚙️ application.yml Configuration
-```yaml
+3.  **Configure GCS Buckets:**
+    * Update the `google.gcs.raw-bucket` property with the name of your GCS bucket for raw uploads.
 
-spring:
-  datasource:
-    url: ---- URL ----
-    username: postgres
-    password: postgres
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+4.  **Configure Kafka:**
+    * Update the `spring.kafka.bootstrap-servers` property with the address(es) of your Kafka broker(s).
+    * Ensure the `spring.kafka.producer.key-serializer` and `spring.kafka.producer.value-serializer` are correctly set (using `org.springframework.kafka.support.serializer.JsonSerializer` is recommended for sending JSON objects like the `Content` entity).
 
-  kafka:
-    bootstrap-servers: ---URL ---
-    consumer:
-      group-id: video-ingestion-group
-      auto-offset-reset: earliest
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    admin:
-      auto-create-topics: true
-    topics:
-      video_ingested:
-        partitions: 3
-        replication-factor: 1
+5.  **Configure Database:**
+    * Configure your database connection details in `application.properties` or `application.yml` (e.g., database URL, username, password, driver).
+    * Ensure your database is running and accessible.
 
-google:
-  cloud:
-    project-id: ----peoject id -----
-    credentials:
-      file: D:/projects/CDN/GOOGLE_APPLICATION_CREDENTIALS/
+6.  **Build the application:**
+    ```bash
+    mvn clean install
+    ```
 
-server:
-  port: 8085
-  servlet:
-    multipart:
-      max-file-size: 150MB
-      max-request-size: 150MB
+7.  **Run the application:**
+    ```bash
+    mvn spring-boot:run
+    ```
 
-```
-#### 🚀 Running in Docker
-Build and run the service using Docker:
+The service will start and be accessible on the configured port (default is 8080).
 
-``` sh
-docker build -t ingestion-service .
-docker run -p 8085:8085 ingestion-service
-``` 
-#### 🎯 Contributing
-Fork the repo 🍴
-- Create a new branch (feature-xyz) 🌿
-- Commit your changes (git commit -m "Add new feature") ✅
-- Push the branch (git push origin feature-xyz) 🚀
-- Open a Pull Request (PR) 🛠️
----
-#### 📄 License
-This project is licensed under the MIT License.
+## API Documentation
 
-#### 📬 Contact
-For any questions or support, feel free to reach out! 😊
+The API documentation can be accessed through Swagger UI. Once the application is running, navigate to:
 
+This will provide an interactive interface to explore and test the API endpoints.
+
+## Future Enhancements
+
+* Implement more sophisticated metadata extraction based on the file type (e.g., reading video file metadata).
+* Add support for different content types (audio, images, etc.).
+* Implement video processing workflows (e.g., transcoding, thumbnail generation).
+* Add authentication and authorization to the API endpoints.
+* Implement more robust error handling and logging.
+* Consider using a more specific Kafka key for the `video_ingested` topic.
+* Explore using Spring Cloud Stream for a more abstract approach to Kafka integration.
+* Implement unit and integration tests.
