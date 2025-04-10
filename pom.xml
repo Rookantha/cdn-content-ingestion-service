@@ -37,6 +37,11 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>java-dotenv</artifactId>
+			<version>5.2.2</version>
+		</dependency>
 		<!-- Google Cloud Storage Starter -->
 		<dependency>
 			<groupId>com.google.cloud</groupId>
